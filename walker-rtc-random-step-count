@@ -6,7 +6,7 @@ RTC_DS3231 rtc;
 #define DIR_PIN  4
 #define EN_PIN   5
 
-int movement_steps = 444; 
+int movement_steps = 444;  //100 DEGREES ON MY STEPPER
 int lastWalkDay = -1;      
 bool planGenerated = false; 
 
@@ -28,7 +28,7 @@ void setup() {
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   randomSeed(analogRead(A0));
   
-  // IMMEDIATELY SET THE FIRST WALK
+  // SET THE FIRST WALK
   generateDailyPlan();
 }
 
@@ -36,9 +36,9 @@ void generateDailyPlan() {
   DateTime now = rtc.now();
 
   // SET RANDOMIZED START TIME AND STRIDE COUNT
-  randomStartHour = random(9, 18); 
-  randomStartMin = random(0, 60);
-  totalStrides = random(1000, 20001);
+  randomStartHour = random(9, 18);  // HOUR BETWEEN 9am & 5pm
+  randomStartMin = random(0, 60);  // RANDOMIZE MINUTE
+  totalStrides = random(1000, 20001);  // RANDOMIZE STRIDE COUNT
   planGenerated = true;
 
   Serial.println("\n================================");
@@ -58,29 +58,29 @@ void performStride() {
   digitalWrite(EN_PIN, LOW);
   digitalWrite(DIR_PIN, HIGH); 
   for(int i = 0; i < movement_steps; i++) { 
-    int speed = (i < 50) ? map(i, 0, 50, 800, 400) : 400; 
+    int speed = (i < 50) ? map(i, 0, 50, 800, 400) : 400; // FORWARD ARM SWING SPEED
     digitalWrite(STEP_PIN, HIGH); delayMicroseconds(speed);
     digitalWrite(STEP_PIN, LOW); delayMicroseconds(speed);
   }
-  delay(50); 
+  delay(50);  //FRONT TRANSITION DELAY
   digitalWrite(DIR_PIN, LOW); 
   for(int i = 0; i < movement_steps; i++) {
-    int speed = (i < 50) ? map(i, 0, 50, 800, 500) : 500;
+    int speed = (i < 50) ? map(i, 0, 50, 800, 500) : 500;  //BACKWARD ARM SWING SPEED
     digitalWrite(STEP_PIN, HIGH); delayMicroseconds(speed);
     digitalWrite(STEP_PIN, LOW); delayMicroseconds(speed);
   }
-  delay(80); 
+  delay(80);  //REAR TRASITION DELAY
 }
 
 void loop() {
   DateTime now = rtc.now();
 
-  // 1. If we are in a new day and don't have a plan yet, make one.
+  // CHECK FOR NEW DAY & SCHEDULE WALK
   if (now.day() != lastWalkDay && !planGenerated) {
     generateDailyPlan();
   }
 
-  // 2. The Walk Trigger
+  // WALK TRIGGER
   if (planGenerated && now.day() != lastWalkDay) {
     if (now.hour() == randomStartHour && now.minute() == randomStartMin) {
       Serial.println("Starting scheduled walk");
@@ -96,8 +96,8 @@ void loop() {
       }
       
       digitalWrite(EN_PIN, HIGH); 
-      lastWalkDay = now.day(); // Mark today as done
-      planGenerated = false;   // Flag new plan to be made tomorrow
+      lastWalkDay = now.day(); // MARK TODAY AS DONE
+      planGenerated = false;   // FLAG TOMORROW WALK TO BE GENERATED
       Serial.println("Walk complete");
     }
   }

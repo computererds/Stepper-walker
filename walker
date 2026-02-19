@@ -1,0 +1,43 @@
+#define STEP_PIN 3
+#define DIR_PIN  4
+#define EN_PIN   5
+
+int movement_steps = 444; // 100 Degrees on my stepper
+
+void setup() {
+  pinMode(STEP_PIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
+  pinMode(EN_PIN, OUTPUT);
+  
+  digitalWrite(EN_PIN, HIGH); // Disable motor during power-up
+  
+  delay(3000); // 3-second grace period to set start point and plug in 12V
+  
+  digitalWrite(EN_PIN, LOW); // Engage motor
+}
+
+void loop() {
+  // FORWARD SWING
+  digitalWrite(DIR_PIN, HIGH); 
+  for(int i = 0; i < movement_steps; i++) { 
+    int speed = (i < 50) ? map(i, 0, 50, 800, 400) : 400; 
+    digitalWrite(STEP_PIN, HIGH);
+    delayMicroseconds(speed);
+    digitalWrite(STEP_PIN, LOW);
+    delayMicroseconds(speed);
+  }
+  
+  delay(50); 
+  
+  // BACKWARD SWING
+  digitalWrite(DIR_PIN, LOW); 
+  for(int i = 0; i < movement_steps; i++) {
+    int speed = (i < 50) ? map(i, 0, 50, 800, 500) : 500;
+    digitalWrite(STEP_PIN, HIGH);
+    delayMicroseconds(speed);
+    digitalWrite(STEP_PIN, LOW);
+    delayMicroseconds(speed);
+  }
+  
+  delay(80); 
+}
